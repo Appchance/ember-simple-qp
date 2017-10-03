@@ -12,7 +12,7 @@
     "doc": "doc",
     "test": "tests"
   },
-  "repository": "",
+  "repository": "https://github.com/appchance/ember-simple-qp",
   "scripts": {
     "build": "ember build",
     "start": "ember server",

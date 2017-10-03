@@ -1,26 +1,45 @@
 # ember-simple-qp
+Ember query params without cruft!
 
-This README outlines the details of collaborating on this Ember addon.
+## Installation:
+`ember install ember-simple-qp`
 
-## Installation
+## Usage:
 
-* `git clone <repository-url>` this repository
-* `cd ember-simple-qp`
-* `npm install`
+Define in your route **ONLY**:
 
-## Running
+```javascript
+import Ember from 'ember'
+import QueryParams from 'ember-simple-qp'
 
-* `ember serve`
-* Visit your app at [http://localhost:4200](http://localhost:4200).
+const myQueryParams = new QueryParams({
+  pageNumber: {
+    as: 'page',
+    defaultValue: 1,
+    refresh: true
+  },
+  cityIds: {
+    as: 'cities',
+    refresh: true,
+    replace: true,
+    serialize(val) {
+      return val.toString()
+    },
+    deserialize(urlVal) {
+      return urlVal.split(',')
+    }
+  }
+})
 
-## Running Tests
+export default Ember.Route.extend(myQueryParams.Mixin, {
+  model(params) {
+    // data loading...
+  }
+})
+```
 
-* `npm test` (Runs `ember try:each` to test your addon against multiple Ember versions)
-* `ember test`
-* `ember test --server`
+And be happy :)
 
-## Building
+## Credits:
 
-* `ember build`
-
-For more information on using ember-cli, visit [https://ember-cli.com/](https://ember-cli.com/).
+Inspired by https://github.com/offirgolan/ember-parachute

@@ -1,12 +1,13 @@
 {
   "name": "ember-simple-qp",
-  "version": "0.0.0",
-  "description": "The default blueprint for ember-cli addons.",
+  "version": "0.0.1",
+  "description": "Ember query params without cruft!",
   "keywords": [
-    "ember-addon"
+    "ember-addon",
+    "query-params"
   ],
   "license": "MIT",
-  "author": "",
+  "author": "Appchance",
   "directories": {
     "doc": "doc",
     "test": "tests"

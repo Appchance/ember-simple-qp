@@ -54,7 +54,8 @@ export default class QueryParams {
       allQueryParams: alias('controller.allQueryParams'),
 
       _qp: computed(function() {
-        let controller =getOwner(this).lookup(`controller:${this.controllerName || this.routeName}`)
+        let controllerName = this.controllerName || this.routeName
+        let controller = this.controllerFor(controllerName, true) || this.generateController(controllerName)
 
         if(!controller.get(QUERY_PARAMS_KEY)) {
           controller.reopen(controllerInitialQP)

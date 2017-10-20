@@ -6,10 +6,10 @@ Ember query params without cruft!
 
 ## Usage:
 
-Define in your route **ONLY**:
+Define in your route **ONLY**, and be happy:
 
 ```javascript
-import Ember from 'ember'
+import Route       from '@ember/routing/route'
 import QueryParams from 'ember-simple-qp'
 
 const myQueryParams = new QueryParams({
@@ -31,14 +31,55 @@ const myQueryParams = new QueryParams({
   }
 })
 
-export default Ember.Route.extend(myQueryParams.Mixin, {
+export default Route.extend(myQueryParams.Mixin, {
   model(params) {
     // data loading...
   }
 })
 ```
 
-And be happy :)
+QueryParams object is extensible:
+
+```javascript
+// app/routes/users.js
+import Route                  from '@ember/routing/route'
+import PaginationQueryParams  from 'my-app/query-params/pagination'
+
+const specializedPaginationQueryParams = PaginationQueryParams.extend({
+  filterQ: {
+    as: 'q',
+    defaultValue: '',
+    refresh: true
+  }
+})
+
+export default Route.extend(specializedPaginationQueryParams.Mixin, {
+  model(params) {
+    // data loading...
+  }
+})
+
+```
+
+From now, you will be able to access `resetQueryParams()` function, and `allQueryParams` property:
+
+```javascript
+// app/controllers/users.js
+import Controller from '@ember/controller'
+
+export default Controller.extend({
+  actions: {
+    resetFilters() {
+      // returns EmberObject with qp names as keys with corresponding values
+      this.get('allQueryParams')
+
+      // will restore all qps to their default values
+      this.resetQueryParams()
+    }
+  }
+});
+
+```
 
 ## Credits:
 

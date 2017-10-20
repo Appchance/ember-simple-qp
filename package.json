@@ -1,6 +1,6 @@
 {
   "name": "ember-simple-qp",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "Ember query params without cruft!",
   "keywords": [
     "ember-addon",

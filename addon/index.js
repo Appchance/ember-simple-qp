@@ -70,9 +70,9 @@ export default class QueryParams {
             queryParams: qpNames,
 
             resetQueryParams() {
-              this.get(QUERY_PARAMS_KEY).each((key, {defaultValue}) => {
-                this.set(key, defaultValue)
-              })
+              this.get(QUERY_PARAMS_KEY)
+              ._qpNames()
+              .forEach((key, {defaultValue}) => this.set(key, defaultValue))
             }
           })
         }

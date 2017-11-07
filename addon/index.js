@@ -1,126 +1,77 @@
-import Ember from 'ember'
+import Ember        from 'ember'
+import QueryParams  from './query-params'
+
+import {
+  SQP_KEY,
+  tinyMixin,
+  ensureControllerExistence
+} from './utils'
 
 const {
   Mixin,
-  assign,
   computed,
-  defineProperty,
-  getProperties,
-  getOwner
 } = Ember
 
 const {
   alias
 } = computed
 
-const {
-  keys,
-  values
-} = Object
+const sqpMixin = (sqp) => tinyMixin(SQP_KEY, sqp)
 
-const QUERY_PARAMS_KEY = '_queryParams'
+const prepareRoute = (route, sqp) => {
+  if(route.get(SQP_KEY) || sqp.names().length == 0) return
+  route.reopen(sqpMixin(sqp))
+  route.reopen(sqp.mixinFor('route'))
+  route.reopen({
+    allQueryParams:     alias('controller.allQueryParams'),
 
-const mapValues = function(obj, fn) {
-  let newObj = {}
-  keys(obj).forEach(key => newObj[key] = fn(obj[key]))
-  return newObj
+    serializeQueryParam(value, urlKey) {
+      let [_, options] = this.get(SQP_KEY).byKey(urlKey)
+      if(options && options.serialize) return options.serialize(value)
+
+      return this._super(...arguments)
+    },
+
+    deserializeQueryParam(value, urlKey) {
+      let [_, options] = this.get(SQP_KEY).byKey(urlKey)
+      if(options && options.deserialize) return options.deserialize(value)
+
+      return this._super(...arguments)
+    },
+  })
 }
 
-const toPairs = function(obj) { return keys(obj).map(key => [key, obj[key]]) }
+const prepareController = (route) => {
+  let controller = ensureControllerExistence(route)
+  let sqp = route.get(SQP_KEY)
+  if(!sqp || controller.get(SQP_KEY) || sqp.names().length == 0) return
+  let qpNames = sqp.names()
 
-export default class QueryParams {
-  constructor() {
-    this.queryParams = assign({}, ...arguments)
-    this.Mixin = this._generateMixin()
-  }
+  controller.reopen(sqpMixin(sqp))
+  controller.reopen(sqp.mixinFor('controller'))
 
-  extend() {
-    return new QueryParams(this.queryParams, ...arguments)
-  }
+  controller.reopen({
+    allQueryParams: computed(...qpNames, function() {
+      return this.getProperties(qpNames)
+    }),
 
-  _generateMixin() {
-    let qp                  = this
-    let controllerQP        = this._controllerQP()
-    let routeQP             = this._routeQP()
-    let controllerInitialQP = this._controllerInitialQP()
-    let qpNames             = this._qpNames()
-
-    return Mixin.create({
-      mergedProperties: ['_queryParams'],
-
-      _queryParams: qp,
-      queryParams:  routeQP,
-
-      allQueryParams: alias('controller.allQueryParams'),
-
-      _qp: computed(function() {
-        let controllerName = this.controllerName || this.routeName
-        let controller = this.controllerFor(controllerName, true) || this.generateController(controllerName)
-
-        if(!controller.get(QUERY_PARAMS_KEY)) {
-          controller.reopen(controllerInitialQP)
-
-          defineProperty(controller, 'allQueryParams', computed(...qpNames, function() {
-            return this.getProperties(qpNames)
-          }))
-
-          controller.reopen({
-            _queryParams: qp,
-
-            queryParams: qpNames,
-
-            resetQueryParams() {
-              this.get(QUERY_PARAMS_KEY)
-              ._qpNames()
-              .forEach((key, {defaultValue}) => this.set(key, defaultValue))
-            }
-          })
-        }
-        return this._super(...arguments)
-      }),
-
-      serializeQueryParam(value, urlKey, defaultValueType) {
-        let qp = this.get(QUERY_PARAMS_KEY).qpByKey(urlKey)
-        if(qp && qp.serialize) return qp.serialize(value)
-
-        return this._super(...arguments)
-      },
-
-      deserializeQueryParam(value, urlKey, defaultValueType) {
-        let qp = this.get(QUERY_PARAMS_KEY).qpByKey(urlKey)
-        if(qp && qp.deserialize) return qp.deserialize(value)
-
-        return this._super(...arguments)
-      },
-    })
-  }
-
-  qpByKey(key) {
-    return toPairs(this.queryParams).find(([qpKey, value]) => value.as == key || qpKey == key)[1]
-  }
-
-  _routeQP() {
-    return mapValues(this.queryParams, (obj) => {
-      obj.refreshModel = obj.refresh
-      return getProperties(obj, ['as', 'refreshModel', 'replace'])
-    })
-  }
-
-  _controllerQP() {
-    return keys(this.queryParams).map(key => {
-      let qp = {}
-      qp[key] = getProperties(this.queryParams[key], ['as', 'defaultValue'])
-      return qp
-    })
-  }
-
-  _controllerInitialQP() {
-    return mapValues(
-      this.queryParams,
-      ({defaultValue}) => defaultValue
-    )
-  }
-
-  _qpNames() { return keys(this.queryParams) }
-  _qpArray() { return toPairs(this.queryParams) }
+    resetQueryParams() {
+      qpNames.forEach(key => this.set(key, this.get(`${key}_defaultValue`.camelize())))
+    }
+  })
 }
+
+export default Mixin.create({
+  mergedProperties:   ['simpleQueryParams'],
+  simpleQueryParams:  {},
+
+  init() {
+    this._super(...arguments)
+    prepareRoute(this, new QueryParams(this.get('simpleQueryParams')))
+  },
+
+  _qp: computed(function() {
+    prepareController(this)
+    return this._super(...arguments)
+  }),
+})

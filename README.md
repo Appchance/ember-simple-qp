@@ -10,50 +10,77 @@ Define in your route **ONLY**, and be happy:
 
 ```javascript
 import Route       from '@ember/routing/route'
-import QueryParams from 'ember-simple-qp'
 
-const myQueryParams = new QueryParams({
-  pageNumber: {
-    as: 'page',
-    defaultValue: 1,
-    refresh: true
-  },
-  cityIds: {
-    as: 'cities',
-    refresh: true,
-    replace: true,
-    serialize(val) {
-      return val.toString()
+export default Route.extend({
+  simpleQueryParams: {
+    pageNumber: {
+      as: 'page',
+      defaultValue: 1,
+      refresh: true
     },
-    deserialize(urlVal) {
-      return urlVal.split(',')
+    pageSize: {
+      as: 'per',
+      defaultValue: 20,
+      refresh: true
+    },
+    cityIds: {
+      as: 'cities',
+      refresh: true,
+      replace: true,
+      serialize(val) {
+        return val.toString()
+      },
+      deserialize(urlVal) {
+        return urlVal.split(',')
+      }
     }
   }
-})
 
-export default Route.extend(myQueryParams.Mixin, {
   model(params) {
     // data loading...
   }
 })
 ```
 
-QueryParams object is extensible:
+`simpleQueryParams` property is a `mergedProperty`. You can add new query params on multiple levels:
 
 ```javascript
 // app/routes/users.js
 import Route                  from '@ember/routing/route'
-import PaginationQueryParams  from 'my-app/query-params/pagination'
+import PaginatedRoute         from 'my-app/mixins/paginated-route'
 
-const specializedPaginationQueryParams = PaginationQueryParams.extend({
-  filterQ: {
-    as: 'q',
-    defaultValue: '',
-    refresh: true
+export default Route.extend(PaginatedRoute, {
+  simpleQueryParams: {
+    filterQ: {
+      as: 'q',
+      defaultValue: '',
+      refresh: true
+    }
+  }
+
+  model(params) {
+    // data loading...
   }
 })
 
-export default Route.extend(specializedPaginationQueryParams.Mixin, {
+```
+
+You can also override query params in a particular route. For instance:
+
+```javascript
+// app/routes/users.js
+import Route                  from '@ember/routing/route'
+import PaginatedRoute         from 'my-app/mixins/paginated-route'
+
+export default Route.extend(PaginatedRoute, {
+  simpleQueryParams: {
+    pageSize: {
+      as: 'per',
+      defaultValue: 200, // new default value. We wanna a BIG page here
+      refresh: true
+    },
+  }
+
   model(params) {
     // data loading...
   }

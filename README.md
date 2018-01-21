@@ -1,3 +1,5 @@
+[![npm](https://img.shields.io/npm/dt/ember-simple-qp.svg)](https://www.npmjs.com/package/ember-simple-qp) [![npm version](https://img.shields.io/npm/v/ember-simple-qp.svg)](https://www.npmjs.com/package/ember-simple-qp)
+
 # ember-simple-qp
 Ember query params without cruft!
 
